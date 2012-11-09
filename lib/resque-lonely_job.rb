@@ -28,7 +28,7 @@ module Resque
       # call Resque.watch_queue as the queue should already exist if we're
       # unable to get the lock.
       def reenqueue(*args)
-        Resque.enqueue(self, *args)
+        Resque.enqueue_to(@queue, self, *args)
       end
 
       def before_perform(*args)
