@@ -23,21 +23,12 @@ module Resque
         Resque.redis.del(redis_key(*args))
       end
 
-      # Unfortunately, there's not a Resque interface for lpush so we have to
-      # role our own.  This is based on Resque.push but we don't need to
-      # call Resque.watch_queue as the queue should already exist if we're
-      # unable to get the lock.
-      def reenqueue(*args)
-        Resque.enqueue_to(@queue, self, *args)
-      end
-
       def before_perform(*args)
         unless can_lock_queue?(*args)
           # can't get the lock, so re-enqueue the task
-          reenqueue(*args)
-
+          recreate
           # and don't perform
-          raise Resque::Job::DontPerform
+          raise Resque::Job::DontPerform.new "Queue #{args[:queue]} already has a job running!"
         end
       end
 
